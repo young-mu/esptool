@@ -9,6 +9,9 @@ script:
   - python setup.py flake8
   - python setup.py sdist
   - python setup.py bdist_wheel
+  - mv dist/esptool*.whl "dist/esptool-$(git describe --tags)-py2-none-any.whl"
+  - mv dist/esptool-*.tar.gz "dist/esptool-$(git describe --tags).tar.gz"
+  - find dist/
 
 addons:
   artifacts:
