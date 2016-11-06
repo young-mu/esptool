@@ -7,3 +7,10 @@ python:
 script:
   - python setup.py build
   - python setup.py flake8
+  - python setup.py sdist
+  - python setup.py bdist_wheel
+
+addons:
+  artifacts:
+    paths:
+      - $(find dist/ | tr "\n" ":")
