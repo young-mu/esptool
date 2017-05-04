@@ -328,10 +328,7 @@ class ESPLoader(object):
                 self._port.timeout = 5
                 return None
             except FatalError as e:
-                if esp32r0_delay:
-                    print('_', end='')
-                else:
-                    print('.', end='')
+                print('.', end='')
                 sys.stdout.flush()
                 time.sleep(0.05)
                 last_error = e
@@ -442,7 +439,7 @@ class ESPLoader(object):
             stub = self.STUB_CODE
 
         # Upload
-        print("Uploading stub...")
+#        print("Uploading stub...")
         for field in ['text', 'data']:
             if field in stub:
                 offs = stub[field + "_start"]
@@ -453,13 +450,13 @@ class ESPLoader(object):
                     from_offs = seq * self.ESP_RAM_BLOCK
                     to_offs = from_offs + self.ESP_RAM_BLOCK
                     self.mem_block(stub[field][from_offs:to_offs], seq)
-        print("Running stub...")
+#        print("Running stub...")
         self.mem_finish(stub['entry'])
 
         p = self.read()
         if p != b'OHAI':
             raise FatalError("Failed to start stub. Unexpected response: %s" % p)
-        print("Stub running...")
+#        print("Stub running...")
         return self.STUB_CLASS(self)
 
     @stub_and_esp32_function_only
@@ -478,7 +475,7 @@ class ESPLoader(object):
             write_size = size  # stub expects number of bytes here, manages erasing internally
         else:
             write_size = erase_blocks * self.FLASH_WRITE_SIZE  # ROM expects rounded up to erase block size
-        print("Compressed %d bytes to %d..." % (size, compsize))
+#        print("Compressed %d bytes to %d..." % (size, compsize))
         self.check_command("enter compressed flash mode", self.ESP_FLASH_DEFL_BEGIN,
                            struct.pack('<IIII', write_size, num_blocks, self.FLASH_WRITE_SIZE, offset))
         if size != 0 and not self.IS_STUB:
@@ -519,9 +516,9 @@ class ESPLoader(object):
 
     @stub_and_esp32_function_only
     def change_baud(self, baud):
-        print("Changing baud rate to %d" % baud)
+#        print("Changing baud rate to %d" % baud)
         self.command(self.ESP_CHANGE_BAUDRATE, struct.pack('<II', baud, 0))
-        print("Changed.")
+#        print("Changed.")
         self._port.baudrate = baud
         time.sleep(0.05)  # get rid of crap sent during baud rate change
         self.flush_input()
@@ -1602,7 +1599,7 @@ def _get_flash_params(esp, args):
 def _update_image_flash_params(esp, address, flash_params, image):
     """ Modify the flash mode & size bytes if this looks like an executable image """
     if address == esp.FLASH_HEADER_OFFSET and (image[0] == '\xe9' or image[0] == 0xE9):  # python 2/3 compat:
-        print('Flash params set to 0x%04x' % struct.unpack(">H", flash_params))
+#        print('Flash params set to 0x%04x' % struct.unpack(">H", flash_params))
         image = image[0:2] + flash_params + image[4:]
     return image
 
@@ -1660,12 +1657,12 @@ def write_flash(esp, args):
         speed_msg = ""
         if args.compress:
             if t > 0.0:
-                speed_msg = " (effective %.1f kbit/s)" % (uncsize / t * 8 / 1000)
-            print('\rWrote %d bytes (%d compressed) at 0x%08x in %.1f seconds%s...' % (uncsize, written, address, t, speed_msg))
+                speed_msg = " (%.1f kb/s)" % (uncsize / t * 8 / 1000)
+            print('\rWrote %d bytes at 0x%08x in %.1f seconds%s.' % (uncsize, address, t, speed_msg))
         else:
             if t > 0.0:
-                speed_msg = " (%.1f kbit/s)" % (written / t * 8 / 1000)
-            print('\rWrote %d bytes at 0x%08x in %.1f seconds%s...' % (written, address, t, speed_msg))
+                speed_msg = " (%.1f kb/s)" % (written / t * 8 / 1000)
+            print('\rWrote %d bytes at 0x%08x in %.1f seconds%s.' % (written, address, t, speed_msg))
         try:
             res = esp.flash_md5sum(address, uncsize)
             if res != calcmd5:
@@ -1673,11 +1670,11 @@ def write_flash(esp, args):
                 print('Flash md5: %s' % res)
                 print('MD5 of 0xFF is %s' % (hashlib.md5(b'\xFF' * uncsize).hexdigest()))
                 raise FatalError("MD5 of file does not match data in flash!")
-            else:
-                print('Hash of data verified.')
+#            else:
+#                print('Hash of data verified.')
         except NotImplementedInROMError:
             pass
-    print('\nLeaving...')
+#    print('\nLeaving...')
 
     if esp.IS_STUB:
         # skip sending flash_finish to ROM loader here,
@@ -2057,7 +2054,7 @@ def main():
 
     args = parser.parse_args()
 
-    print('esptool.py v%s' % __version__)
+#    print('esptool.py v%s' % __version__)
 
     # operation function can take 1 arg (args), 2 args (esp, arg)
     # or be a member function of the ESPLoader class.
@@ -2101,7 +2098,7 @@ def main():
             esp.flash_spi_attach(0)
 
         if hasattr(args, "flash_size"):
-            print("Configuring flash size...")
+#            print("Configuring flash size...")
             detect_flash_size(esp, args)
             esp.flash_set_parameters(flash_size_bytes(args.flash_size))
 
@@ -2109,10 +2106,10 @@ def main():
 
         # finish execution based on args.after
         if args.after == 'hard_reset':
-            print('Hard resetting...')
+#            print('Hard resetting...')
             esp.hard_reset()
         elif args.after == 'soft_reset':
-            print('Soft resetting...')
+#            print('Soft resetting...')
             # flash_finish will trigger a soft reset
             esp.soft_reset(False)
         else:
